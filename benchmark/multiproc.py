@@ -1,10 +1,10 @@
 from multiprocess import Pool
 import time
-from utils import *
+from utils.city import *
 pd.options.mode.chained_assignment = None
 
 DATE_COLUMN = 'timestamp'
-DATA_PATH = 'temperature_data.csv'
+DATA_PATH = '../assets/temperature_data.csv'
 
 def load_data(data_path):
     data = pd.read_csv(data_path)
