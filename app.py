@@ -57,7 +57,6 @@ city_list = data['city'].value_counts().index.tolist()
 st.subheader('City historical and current temperature analysis')
 
 # worker for multiprocess
-@st.cache_data
 def worker(city):
     return city_data_processing(data, city, 30)
 
