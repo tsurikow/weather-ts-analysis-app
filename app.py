@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
-from multiprocess import Pool
+from multiprocessing import Pool
 import asyncio
 import plotly.graph_objects as go
 from utils.city import city_data_processing
