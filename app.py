@@ -19,7 +19,6 @@ st.title('Weather time series app')
 date_column = 'timestamp'
 data_path = 'assets/temperature_data.csv'
 api_key = 'fe7023c956d70b4d16831206ceeeacf5' # very bad decision
-st.session_state.city_list = []
 today = pd.to_datetime('today')
 month = today.month
 day = today.day
@@ -35,14 +34,14 @@ def load_data(data_file):
     return loaded_df
 
 data_load_state = st.text('Loading data...')
-data = load_data(data_path)
-data_load_state.success('Data successfully loaded')
-
 uploaded_file = st.file_uploader("Choose a csv file")
 if uploaded_file is not None:
-    data = load_data(uploaded_file)
+    st.session_state.data = load_data(uploaded_file)
+else:
+    st.session_state.data = load_data(data_path)
+data_load_state.success('Data successfully loaded')
 
-st.session_state.city_list = data['city'].value_counts().index.tolist()
+st.session_state.city_list = st.session_state.data['city'].value_counts().index.tolist()
 
 #if st.checkbox('Show raw data'):
     #st.subheader('Raw data')
@@ -56,18 +55,17 @@ st.subheader('City historical and current temperature analysis')
 # worker for multiprocess
 @st.cache_data
 def worker(city):
-    return city_data_processing(data, city, 30)
+    return city_data_processing(st.session_state.data, city, 30)
 
 # main multiprocess func
-@st.cache_data
-def main():
+def main(city_list):
     #n_worker = 2 # streamlit 2 processes
     cities_data = {}
     cities_trends= {}
     start = time.time()
 
     with Pool() as pool:
-        for result in pool.imap(worker, st.session_state.city_list):
+        for result in pool.imap(worker, city_list):
             cities_data[result[2]] = result[0]
             cities_trends[result[2]] = result[1]
 
@@ -75,12 +73,22 @@ def main():
     multi_pool = end - start
     return multi_pool, cities_data, cities_trends
 
+def process():
+    multi_pool, cities_data, cities_trends = main(st.session_state.city_list)
+    st.session_state.cities_data = cities_data
+    st.session_state.cities_trends = cities_trends
+    st.success(f'All historical data successfully processed in {"%.1f" % multi_pool} seconds')
+
 if __name__ == '__main__':
-    if uploaded_file is not None or 'cities_data' not in st.session_state:
-        multi_pool, cities_data, cities_trends = main()
-        st.session_state.cities_data = cities_data
-        st.session_state.cities_trends = cities_trends
-        st.success(f'All historical data successfully processed in {"%.1f" %multi_pool} seconds')
+    if 'cities_data' not in st.session_state:
+        process()
+    elif uploaded_file is not None:
+            if 'uploaded_file' not in st.session_state:
+                st.session_state.uploaded_file = uploaded_file
+                process()
+            elif uploaded_file != st.session_state.uploaded_file:
+                st.session_state.uploaded_file = uploaded_file
+                process()
 
 # input other API key
 api_input = st.text_input("OpenWeather API key", f"{api_key}")
@@ -98,7 +106,7 @@ def get_current_temperature(cities, api):
     except Exception as e:
         st.error(e)
 
-if api_input:
+if api_input or uploaded_file is not None:
     api_key = api_input
     cities_temp = get_current_temperature(st.session_state.city_list, api_key)
 

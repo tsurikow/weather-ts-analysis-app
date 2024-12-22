@@ -6,7 +6,7 @@ def trend_sarimax(data, city, steps=12):
     # SARIMAX для прогноза долгосрочного тренда
     city_ts = data[data['city'] == city]['temperature']
     city_ts_M = pd.DataFrame(city_ts.resample('ME').mean())
-    city_M_sarimax = sm.tsa.SARIMAX(endog=city_ts_M, order=[1,1,0], seasonal_order=[1,1,1,12]).fit(maxiter=200, method='bfgs', disp=False)
+    city_M_sarimax = sm.tsa.SARIMAX(endog=city_ts_M, order=[1,1,0], seasonal_order=[1,1,1,12], simple_differencing=True).fit(maxiter=200, method='bfgs', disp=False)
     predict = city_M_sarimax.get_prediction()
     result = pd.DataFrame(predict.predicted_mean).rename(columns = {'predicted_mean':'train_prediction'})
     forecast = city_M_sarimax.forecast(steps=steps)
