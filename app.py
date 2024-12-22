@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
-from multiprocessing import Pool
+from multiprocess import Pool
 import asyncio
 import plotly.graph_objects as go
 from utils.city import city_data_processing
@@ -57,10 +57,12 @@ city_list = data['city'].value_counts().index.tolist()
 st.subheader('City historical and current temperature analysis')
 
 # worker for multiprocess
+@st.cache_data
 def worker(city):
     return city_data_processing(data, city, 30)
 
 # main multiprocess func
+@st.cache_data
 def main():
     #n_worker = 4
 
