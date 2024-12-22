@@ -22,7 +22,7 @@ def qualityMAPE(x,y):
     qlt = ((x-y).abs()/x.abs()).replace([np.inf, -np.inf], np.nan)
     return qlt.mean() , qlt
 
-processes = []
+
 data_list = []
 def worker(city):
     return city_data_processing(data, city, 30)
