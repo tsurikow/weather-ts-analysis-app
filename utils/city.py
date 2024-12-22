@@ -4,7 +4,7 @@ import numpy as np
 from streamlit import cache_data
 
 @cache_data
-def trend_sarimax(data, city, steps=36):
+def trend_sarimax(data, city, steps=12):
     # SARIMAX для прогноза долгосрочного тренда
     city_ts = data[data['city'] == city]['temperature']
     city_ts_M = pd.DataFrame(city_ts.resample('ME').mean())

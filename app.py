@@ -19,10 +19,7 @@ st.title('Weather time series app')
 date_column = 'timestamp'
 data_path = 'assets/temperature_data.csv'
 api_key = 'fe7023c956d70b4d16831206ceeeacf5' # very bad decision
-cities_data = {}
-cities_trends = {}
-cities_temp = {}
-city_list = []
+st.session_state.city_list = []
 today = pd.to_datetime('today')
 month = today.month
 day = today.day
@@ -45,7 +42,7 @@ uploaded_file = st.file_uploader("Choose a csv file")
 if uploaded_file is not None:
     data = load_data(uploaded_file)
 
-city_list = data['city'].value_counts().index.tolist()
+st.session_state.city_list = data['city'].value_counts().index.tolist()
 
 #if st.checkbox('Show raw data'):
     #st.subheader('Raw data')
@@ -63,22 +60,26 @@ def worker(city):
 
 # main multiprocess func
 def main():
-    #n_worker = 4
-
+    n_worker = 2
+    cities_data = {}
+    cities_trends= {}
     start = time.time()
 
-    with Pool() as pool:
-        for result in pool.imap(worker, city_list):
+    with Pool(n_worker) as pool:
+        for result in pool.imap(worker, st.session_state.city_list):
             cities_data[result[2]] = result[0]
             cities_trends[result[2]] = result[1]
 
     end = time.time()
     multi_pool = end - start
-    return multi_pool
+    return multi_pool, cities_data, cities_trends
 
 if __name__ == '__main__':
-    multi_pool = main()
-    st.success(f'All historical data successfully processed in {"%.1f" %multi_pool} seconds')
+    if uploaded_file is not None or 'cities_data' not in st.session_state:
+        multi_pool, cities_data, cities_trends = main()
+        st.session_state.cities_data = cities_data
+        st.session_state.cities_trends = cities_trends
+        st.success(f'All historical data successfully processed in {"%.1f" %multi_pool} seconds')
 
 # input other API key
 api_input = st.text_input("OpenWeather API key", f"{api_key}")
@@ -98,15 +99,15 @@ def get_current_temperature(cities, api):
 
 if api_input:
     api_key = api_input
-    cities_temp = get_current_temperature(city_list, api_key)
+    cities_temp = get_current_temperature(st.session_state.city_list, api_key)
 
 city_name = st.selectbox(
     "Select city",
-    city_list
+    st.session_state.city_list
 )
 
-city_data = cities_data[city_name]
-city_trend = cities_trends[city_name]
+city_data = st.session_state.cities_data[city_name]
+city_trend = st.session_state.cities_trends[city_name]
 
 # seasonal profile for today date
 city_same_day = city_data[(city_data.index.month == month) & (city_data.index.day == day)]
