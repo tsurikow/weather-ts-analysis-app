@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
-from multiprocess import Pool
+#from multiprocess import Pool
 import asyncio
 import plotly.graph_objects as go
 from utils.city import city_data_processing
@@ -64,10 +64,14 @@ def main(city_list):
     cities_trends= {}
     start = time.time()
 
-    with Pool() as pool:
-        for result in pool.imap(worker, city_list):
-            cities_data[result[2]] = result[0]
-            cities_trends[result[2]] = result[1]
+    #with Pool() as pool:
+        #for result in pool.imap(worker, city_list):
+            #cities_data[result[2]] = result[0]
+            #cities_trends[result[2]] = result[1]
+    for city in city_list:
+        result = worker(city)
+        cities_data[result[2]] = result[0]
+        cities_trends[result[2]] = result[1]
 
     end = time.time()
     multi_pool = end - start
