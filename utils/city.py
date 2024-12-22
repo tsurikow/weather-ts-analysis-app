@@ -1,9 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from streamlit import cache_data
 
-@cache_data
 def trend_sarimax(data, city, steps=12):
     # SARIMAX для прогноза долгосрочного тренда
     city_ts = data[data['city'] == city]['temperature']
@@ -32,7 +30,6 @@ def trend_sarimax(data, city, steps=12):
         trend = 'Probably decreasing mean temp'
     return trend
 
-@cache_data
 def city_data_processing(data, city, window=30, steps=36):
     city_data = data[data['city'] == city]
     city_data['smoothed'] = np.convolve(city_data['temperature'], np.ones(window)/window, 'same')
