@@ -1,21 +1,14 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from streamlit import cache_data
 
-@cache_data
-def trend_sarimax(data, city, steps=36):
+def trend_sarimax(data, city, steps=12):
     # SARIMAX для прогноза долгосрочного тренда
     city_ts = data[data['city'] == city]['temperature']
     city_ts_M = pd.DataFrame(city_ts.resample('ME').mean())
-    city_M_sarimax = sm.tsa.SARIMAX(endog=city_ts_M, order=[1,1,0], seasonal_order=[1,1,1,12]).fit(maxiter=200, method='bfgs', disp=False)
-    predict = city_M_sarimax.get_prediction()
-    result = pd.DataFrame(predict.predicted_mean).rename(columns = {'predicted_mean':'train_prediction'})
+    city_M_sarimax = sm.tsa.SARIMAX(endog=city_ts_M, order=[1,1,0], seasonal_order=[1,1,1,12], simple_differencing=True).fit(maxiter=200, method='bfgs', disp=False)
     forecast = city_M_sarimax.forecast(steps=steps)
     city_ts_final = pd.DataFrame(city_ts_M).merge(
-    result,
-    how = 'left', left_index = True, right_index = True
-    ).merge(
         pd.DataFrame(forecast).rename(columns = {'predicted_mean':'forecast'}),
         how = 'outer', left_index = True, right_index = True)
     future_mean = city_ts_final['forecast'].iloc[-steps:].mean()
@@ -32,7 +25,6 @@ def trend_sarimax(data, city, steps=36):
         trend = 'Probably decreasing mean temp'
     return trend
 
-@cache_data
 def city_data_processing(data, city, window=30, steps=36):
     city_data = data[data['city'] == city]
     city_data['smoothed'] = np.convolve(city_data['temperature'], np.ones(window)/window, 'same')
