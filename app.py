@@ -59,8 +59,9 @@ def worker(city):
     return city_data_processing(data, city, 30)
 
 # main multiprocess func
+@st.cache_data
 def main():
-    n_worker = 2
+    n_worker = 2 # streamlit 2 processes
     cities_data = {}
     cities_trends= {}
     start = time.time()
