@@ -61,12 +61,12 @@ def worker(city):
 # main multiprocess func
 @st.cache_data
 def main():
-    n_worker = 2 # streamlit 2 processes
+    #n_worker = 2 # streamlit 2 processes
     cities_data = {}
     cities_trends= {}
     start = time.time()
 
-    with Pool(n_worker) as pool:
+    with Pool() as pool:
         for result in pool.imap(worker, st.session_state.city_list):
             cities_data[result[2]] = result[0]
             cities_trends[result[2]] = result[1]
